@@ -1,118 +1,233 @@
-import Image from "next/image";
 import { Inter } from "next/font/google";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import numeral from "numeral";
 
 const inter = Inter({ subsets: ["latin"] });
+type dataType = {
+  status: string;
+  lastUpdate: string;
+  lastTradePrice: number;
+  bids?: [string, string][];
+  asks?: [string, string][];
+};
+interface PageProps {
+  data: dataType;
+}
+const usdCurrencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 5,
+  maximumFractionDigits: 5,
+});
+export default function Home({ data }: PageProps) {
+  const [notPrice, setNotPrice] = useState<
+    { irt: dataType; usdt: dataType } | undefined
+  >();
 
-export default function Home() {
+  const [irtCalculatedValue, setIrtCalculatedValue] = useState(0);
+  const [irtInputValue, setIrtInputValue] = useState("");
+
+  const [usdCalculatedValue, setusdCalculatedValue] = useState(0);
+  const [usdInputValue, setUsdInputValue] = useState("");
+
+  useEffect(() => {
+    const f = async () => {
+      try {
+        const notIRT: dataType = (await axios.get("/api/notIRT")).data;
+        const notUSDT: dataType = (await axios.get("/api/notUSDT")).data;
+        setNotPrice({
+          irt: notIRT,
+          usdt: notUSDT,
+        });
+        // console.log(notIRT);
+        // console.log(notUSDT);
+      } catch (error) {
+        setNotPrice(undefined);
+        // console.log(error);
+      }
+    };
+    f();
+  }, []);
+  const handleChangeIRTCalculation = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (notPrice?.irt.lastTradePrice) {
+      const inputValue = parseFloat(e.target.value.replace(/,/g, ""));
+      const lastTradePrice = parseFloat(notPrice.irt.lastTradePrice as any);
+
+      if (!isNaN(inputValue) && !isNaN(lastTradePrice)) {
+        const value = inputValue * lastTradePrice;
+        setIrtCalculatedValue(value);
+      } else {
+        setIrtCalculatedValue(0);
+      }
+
+      const formattedInputValue = e.target.value
+        .replace(/\D/g, "")
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      setIrtInputValue(formattedInputValue);
+    }
+  };
+  const handleChangeUSDCalculation = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (notPrice?.usdt.lastTradePrice) {
+      const inputValue = parseFloat(e.target.value.replace(/,/g, ""));
+      const lastTradePrice = parseFloat(notPrice.usdt.lastTradePrice as any);
+
+      if (!isNaN(inputValue) && !isNaN(lastTradePrice)) {
+        const value = inputValue * lastTradePrice;
+        setusdCalculatedValue(value);
+      } else {
+        setusdCalculatedValue(0);
+      }
+
+      const formattedInputValue = e.target.value
+        .replace(/\D/g, "")
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      setUsdInputValue(formattedInputValue);
+    }
+  };
+
+  const formatNumber = (number: number): string => {
+    const adjustedNumber = number / 10;
+
+    return numeral(adjustedNumber).format("0,0.0");
+  };
+  const formatUSDNumber = (number: number): string => {
+    const adjustedNumber = number;
+
+    return numeral(adjustedNumber).format("0,0.00");
+  };
+
   return (
     <main
       className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
     >
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">pages/index.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Discover and deploy boilerplate example Next.js&nbsp;projects.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+      <div className="flex flex-wrap items-center justify-center gap-10">
+        {notPrice === undefined ? (
+          <>
+            <div className="animate-pulse aspect-square w-[350px] h-[360px] bg-slate-700  rounded-lg p-4"></div>
+            <div className="animate-pulse aspect-square w-[350px] h-[360px] bg-slate-700  rounded-lg p-4"></div>
+          </>
+        ) : (
+          <>
+            <div className="aspect-square w-[350px] h-[360px] bg-white ring-[2px] ring-gray-300 rounded-lg p-4">
+              <div className="flex items-center justify-center">
+                <div className=" items-center flex -space-x-2.5 rtl:space-x-reverse cursor-pointer ">
+                  <img
+                    src="https://nobitex.ir/nobitex-cdn/crypto/not.svg"
+                    className="size-14 bg-cover"
+                    alt=""
+                  />
+                  <img
+                    src="https://nobitex.ir/_nuxt/img/rls.fa78faa.svg"
+                    className="size-14 bg-cover"
+                    alt=""
+                  />
+                </div>
+              </div>
+              <h3 className="flex items-center justify-center text-black/70 font-semibold mt-8 text-xl">
+                NOT IRT
+              </h3>
+              <h6 className="flex items-center justify-center text-black/70 font-semibold mt-8 text-lg">
+                <span className="text-xs">تومان</span>
+                {notPrice?.irt?.lastTradePrice
+                  ? formatNumber(notPrice?.irt?.lastTradePrice)
+                  : ""}
+              </h6>
+              <div className="flex items-center justify-center text-black/70 font-semibold mt-8 text-base">
+                Calculate :
+              </div>
+              <div className="flex items-center text-black/70 justify-center mt-4">
+                <input
+                  onChange={handleChangeIRTCalculation}
+                  className="w-[140px] border-none outline-none ring-1 ring-gray-400 bg-white rounded-[4px] py-1 px-1 "
+                  type="text"
+                  value={irtInputValue.toLocaleString()}
+                />
+                {/* <div className="mx-2">*</div> */}
+                <div>
+                  {typeof notPrice?.irt?.lastTradePrice === "number"
+                    ? formatNumber(notPrice?.irt?.lastTradePrice)
+                    : ""}
+                </div>
+              </div>
+              <div className="text-black/70 flex flex-col items-center justify-center">
+                <div className="mx-2">=</div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs -ml-7">تومان</span>
+                  <span>{formatNumber(irtCalculatedValue)}</span>
+                </div>
+              </div>
+            </div>
+            <div className="aspect-square w-[350px] h-[360px] bg-white ring-[2px] ring-gray-300 rounded-lg p-4">
+              <div className="flex items-center justify-center">
+                <div className=" items-center flex -space-x-2.5 rtl:space-x-reverse cursor-pointer ">
+                  <img
+                    src="https://nobitex.ir/nobitex-cdn/crypto/not.svg"
+                    className="size-14 bg-cover"
+                    alt=""
+                  />
+                  <img
+                    src="https://nobitex.ir/_nuxt/img/usdt.2d18fca.svg"
+                    className="size-14 bg-cover"
+                    alt=""
+                  />
+                </div>
+              </div>
+              <h3 className="flex items-center justify-center text-black/70 font-semibold mt-8 text-xl">
+                NOT USDT
+              </h3>
+              <h6 className="flex items-center justify-center text-black/70 font-semibold mt-8 text-lg">
+                {/* {notPrice?.irt.lastTradePrice} */}
+                {notPrice?.usdt?.lastTradePrice
+                  ? usdCurrencyFormatter.format(notPrice?.usdt?.lastTradePrice)
+                  : ""}
+              </h6>
+              <div className="flex items-center justify-center text-black/70 font-semibold mt-8 text-base">
+                Calculate :
+              </div>
+              <div className="flex items-center text-black/70 justify-center mt-4">
+                <input
+                  onChange={handleChangeUSDCalculation}
+                  className="w-[140px] border-none outline-none ring-1 ring-gray-400 bg-white rounded-[4px] py-1 px-1 "
+                  type="text"
+                  value={usdInputValue.toLocaleString()}
+                />
+                {/* <div className="mx-2">*</div> */}
+                <div>
+                  {typeof notPrice?.irt?.lastTradePrice === "number"
+                    ? usdCurrencyFormatter.format(
+                        notPrice?.usdt?.lastTradePrice
+                      )
+                    : ""}
+                </div>
+              </div>
+              <div className="text-black/70 flex flex-col items-center justify-center">
+                <div className="mx-2">=</div>
+                <div>${formatUSDNumber(usdCalculatedValue)}</div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </main>
   );
 }
+
+// export const getServerSideProps = async () => {
+//   let data;
+//   try {
+//     const res = await axios.get("https://api.nobitex.ir/v2/orderbook/NOTUSDT");
+//     data = res;
+//   } catch (error) {
+//     console.log(error);
+//   }
+//   return {
+//     props: {
+//       data,
+//     },
+//   };
+// };

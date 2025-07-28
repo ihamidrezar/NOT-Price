@@ -1,0 +1,20 @@
+{
+  "name": "NOT Price",
+  "short_name": "NOT Price",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/28850.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import axios from 'axios';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
-      const response = await axios.get('https://api.nobitex.ir/v2/orderbook/NOTIRT');
+      const response = await axios.get('https://api.nobitex.ir/v2/orderbook/USDTIRT');
   
       res.status(response.status).json(response.data);
     } catch (error: any) {
